@@ -22,8 +22,12 @@ def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) 
     Returns:
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
     """
-    # TODO: Implement for Task 1.1.
-    raise NotImplementedError('Need to implement for Task 1.1')
+    vals_pos = list(vals)
+    vals_neg = list(vals)
+    vals_pos[arg] += epsilon
+    vals_neg[arg] -= epsilon
+
+    return (f(*vals_pos) - f(*vals_neg)) / (2 * epsilon)
 
 
 variable_count = 1
@@ -61,8 +65,19 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    visited = set()
+    take = []
+
+    def visit(v: Variable) -> None:
+        if v.is_constant() or v.unique_id in visited:
+            return
+        visited.add(v.unique_id)
+        for parent in v.parents:
+            visit(parent)
+        take.append(v)
+
+    visit(variable)
+    return reversed(take)
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -76,8 +91,15 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    nakop = {variable.unique_id: deriv}
+
+    for v in topological_sort(variable):
+        n = nakop[v.unique_id]
+        if v.is_leaf():
+            v.accumulate_derivative(n)
+        else:
+            for parent, d in v.chain_rule(n):
+                nakop[parent.unique_id] = nakop.get(parent.unique_id, 0.0) + d
 
 
 @dataclass
